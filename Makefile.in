@@ -1,0 +1,26 @@
+.PHONY	: all install clean tags
+
+all: tags
+	if test "x${COMPILE_DASKR}" = "xTrue"; then \
+	  (cd fortran/daskr; ./build.sh) ; \
+	fi
+	if test "x${SUPPLY_XERBLA}" = "xTrue"; then \
+	  (cd fortran/xerbla; ./build.sh) ; \
+	fi
+	${PYTHON_EXE} setup.py build
+
+install: all tags
+	${PYTHON_EXE} setup.py install
+
+clean:
+	if test "x${COMPILE_DASKR}" = "xTrue"; then \
+	  (cd fortran/daskr; ./clean.sh) ; \
+	fi
+	if test "x${SUPPLY_XERBLA}" = "xTrue"; then \
+	  (cd fortran/xerbla; ./clean.sh) ; \
+	fi
+	rm -Rf build
+	rm -f tags
+
+tags:
+	ctags -R src || true
