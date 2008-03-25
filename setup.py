@@ -17,14 +17,14 @@ def main():
     from distutils.core import setup,Extension
 
     def old_config():
-        print "*** You are using an old version of Pylinear's configuration."
+        print "*** You are using an old version of PyUblasExt's configuration."
         print "*** Please re-run configure."
         sys.exit(1)
 
-    if "PYUBLASEXTI_CONF_TEMPLATE_VERSION" not in conf:
+    if "PYUBLASEXT_CONF_TEMPLATE_VERSION" not in conf:
         old_config()
 
-    if conf["PYUBLASEXTI_CONF_TEMPLATE_VERSION"] < 2:
+    if conf["PYUBLASEXT_CONF_TEMPLATE_VERSION"] < 2:
         old_config()
 
     # These are in Fortran. No headers available.
@@ -97,7 +97,8 @@ def main():
                                    libraries=LIBRARIES + OP_EXTRA_LIBRARIES,
                                    extra_compile_args=conf["EXTRA_COMPILE_ARGS"],
                                    ),
-                        ]
+                        ],
+          data_files=[("include/pyublasext", glob.glob("src/cpp/pyublasext/*.hpp"))],
          )
 
 
