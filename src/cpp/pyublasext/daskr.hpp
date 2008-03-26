@@ -139,6 +139,9 @@ namespace boost { namespace numeric { namespace bindings {  namespace daskr {
       static dae<Vector> *StaticEquation;
 
     public:
+      typedef Vector vector_type;
+      typedef VectorRef vector_ref_type;
+
       dae_solver(dae<Vector> &eq)
         : Equation(eq), RelativeTolerance(1e-10), AbsoluteTolerance(1e-10),
         NRT(0), Initialized(false)

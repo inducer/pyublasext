@@ -139,16 +139,18 @@ namespace pyublasext
       {
         super::apply(operand, result);
 
+        ResultType iterand = result;
         result.clear();
         solve_cg(
             m_matrix, 
             m_preconditioner, 
-            result, 
+            iterand, 
             operand, 
             this->m_tolerance,
             this->m_maxIterations, 
             const_cast<unsigned *>(&this->m_lastIterationCount), 
             this->m_debugLevel);
+        result.assign(iterand);
       }
   };
 }

@@ -9,3 +9,4 @@ doc/html
 *.pyc
 Makefile
 tags
+*.session

@@ -10,7 +10,6 @@ HAVE_BLAS = ${HAVE_BLAS}
 HAVE_LAPACK = ${HAVE_LAPACK}
 HAVE_ARPACK = ${HAVE_ARPACK}
 HAVE_UMFPACK = ${HAVE_UMFPACK}
-HAVE_FFTW = ${HAVE_FFTW}
 
 # DASKR is included in PyUblasExt's source for your convenience.
 # You may go to fortran/daskr and run ./build.sh, then set 
@@ -41,10 +40,6 @@ ARPACK_LIBRARIES = $str{ARPACK_LIB_NAMES}.split(",")
 UMFPACK_INCLUDE_DIRS = [$str{UMFPACK_INC_DIR}] 
 UMFPACK_LIBRARY_DIRS = []
 UMFPACK_LIBRARIES = $str{UMFPACK_LIB_NAMES}.split(",")
-
-FFTW_INCLUDE_DIRS = [$str{FFTW_INC_DIR}] 
-FFTW_LIBRARY_DIRS = []
-FFTW_LIBRARIES = $str{FFTW_LIB_NAMES}.split(",")
 
 DASKR_LIBRARY_DIRS = ["fortran/daskr"]
 DASKR_LIBRARIES = ["daskr"]

@@ -27,12 +27,12 @@
 
 
 
+#include <vector>
 #include <boost/numeric/bindings/traits/type_traits.hpp>  	
 #include <boost/numeric/bindings/traits/vector_traits.hpp>  	
 #include <boost/scoped_array.hpp>  	
-#include <matrix_operator.hpp>
-#include <vector>
-#include "detail/arpack_proto.hpp"
+#include <pyublasext/matrix_operator.hpp>
+#include <pyublasext/arpack_proto.hpp>
 #include <boost/lexical_cast.hpp>
 //#include <boost/numeric/bindings/arpack/arpack_proto.hpp>
 
@@ -56,7 +56,7 @@ namespace boost { namespace numeric { namespace bindings {  namespace arpack {
 
   namespace detail
   {
-    const char *mapWhichToString(which_eigenvalues we)
+    const char *map_which_to_string(which_eigenvalues we)
     {
       switch (we)
       {
@@ -107,7 +107,7 @@ namespace boost { namespace numeric { namespace bindings {  namespace arpack {
   namespace detail
   {
     template <typename VectorType>
-    void makeResults(unsigned nconv, unsigned n, 
+    void make_results(unsigned nconv, unsigned n, 
                      typename results<VectorType>::real_type *z, 
                      std::complex<typename results<VectorType>::real_type> *d, 
                      results<VectorType> &my_results)
@@ -140,10 +140,11 @@ namespace boost { namespace numeric { namespace bindings {  namespace arpack {
             ritz_vector[j] = complex_type(z[i*n + j], z[(i+1)*n +j]);
           my_results.m_ritz_vectors.push_back(ritz_vector);
 
+          VectorType ritz_vector_2(n);
           // conjugate ritz vector
           for (unsigned j = 0; j < n; j++)
-            ritz_vector[j] = complex_type(z[i*n + j], -z[(i+1)*n +j]);
-          my_results.m_ritz_vectors.push_back(ritz_vector);
+            ritz_vector_2[j] = complex_type(z[i*n + j], -z[(i+1)*n +j]);
+          my_results.m_ritz_vectors.push_back(ritz_vector_2);
 
           i += 2;
         }
@@ -161,7 +162,7 @@ namespace boost { namespace numeric { namespace bindings {  namespace arpack {
     }
 
     template <typename VectorType>
-    void makeResults(unsigned nconv, unsigned n, 
+    void make_results(unsigned nconv, unsigned n, 
                      std::complex<typename results<VectorType>::real_type> *z, 
                      std::complex<typename results<VectorType>::real_type> *d, 
                      results<VectorType> &my_results)
@@ -202,12 +203,12 @@ namespace boost { namespace numeric { namespace bindings {  namespace arpack {
            typename ResultsVectorType, 
            typename IterationVectorType>
   inline
-  void performReverseCommunication(
+  void perform_reverse_communication(
       const MatrixOrOperator &op, 
       const MatrixOrOperator *m,
       arpack_mode mode,
       std::complex<typename boost::numeric::bindings::traits::type_traits<
-        typename MatrixOrOperator::value_type
+        typename MatrixOrOperator::operand_type::value_type
       >::real_type> spectral_shift,
       int number_of_eigenvalues,
       int number_of_arnoldi_vectors,
@@ -215,13 +216,13 @@ namespace boost { namespace numeric { namespace bindings {  namespace arpack {
       const IterationVectorType &starting_vector,
       which_eigenvalues which_e = LARGEST_MAGNITUDE,
       typename boost::numeric::bindings::traits::type_traits<
-        typename MatrixOrOperator::value_type
+        typename MatrixOrOperator::operand_type::value_type
       >::real_type tolerance = 1e-8,
       int max_iterations = 0
       )
   {
     typedef 
-      typename MatrixOrOperator::value_type
+      typename MatrixOrOperator::operand_type::value_type
       value_type;
     typedef 
       typename boost::numeric::bindings::traits::type_traits<value_type>::real_type
@@ -239,7 +240,7 @@ namespace boost { namespace numeric { namespace bindings {  namespace arpack {
     if ((m != 0) && ((unsigned) n != m->size1() || (unsigned) n != m->size2()))
       throw std::runtime_error("arpack: matrix sizes don't match.");
 
-    char *which = const_cast<char*>(detail::mapWhichToString(which_e));
+    char *which = const_cast<char*>(detail::map_which_to_string(which_e));
 
     boost::scoped_array<value_type> residual(new value_type[n]);
     for (int i = 0; i < n; i++)
@@ -340,19 +341,14 @@ namespace boost { namespace numeric { namespace bindings {  namespace arpack {
 
       if (ido == -1 || ido == 1 || ido == 2)
       {
-        IterationVectorType operand, result;
-        operand.resize(n);
-        result.resize(n);
-
         value_type *x = workd.get() + ipntr[1-1] - 1;
         value_type *y = workd.get() + ipntr[2-1] - 1;
 
-        for (int i = 0; i < n; i++)
-        {
-          operand[i] = x[i];
-          result[i] = 0;
-        }
+        IterationVectorType operand;
+        operand.resize(n);
+        std::copy(x, x+n, operand.begin());
 
+        IterationVectorType result;
         if (ido == 2) 
         {
           if (m == 0)
@@ -363,8 +359,7 @@ namespace boost { namespace numeric { namespace bindings {  namespace arpack {
         else
           result = prod(op, operand);
 
-        for (int i = 0; i < n; i++)
-          y[i] = result[i];
+        std::copy(result.begin(), result.end(), y);
       }
       else if (ido == 99) /*nothing*/;
       else
@@ -463,7 +458,7 @@ namespace boost { namespace numeric { namespace bindings {  namespace arpack {
       }
 
       unsigned nconv = iparam[5-1];
-      detail::makeResults(nconv, n, z.get(), d.get(), res);
+      detail::make_results(nconv, n, z.get(), d.get(), res);
     }
   }
 }}}} 

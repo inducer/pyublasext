@@ -43,15 +43,6 @@ vars = [
     ("UMFPACK_LIB_NAMES", "umfpack,amd",
         "Library names for UMFPACK, comma-separated"),
     # -------------------------------------------------------------------------
-    ("HAVE_FFTW", False,
-        "Whether to build with support for FFTW3"),
-    ("FFTW_INC_DIR", None,
-        "Include directory for FFTW"),
-    ("FFTW_LIB_DIR", None,
-        "Library directory for FFTW"),
-    ("FFTW_LIB_NAMES", "fftw3,m",
-        "Library names for FFTW, comma-separated"),
-    # -------------------------------------------------------------------------
     ("CXXFLAGS", "-Wno-sign-compare",
         "Any extra C++ compiler options to include"),
     ("SUPPLY_XERBLA", False,

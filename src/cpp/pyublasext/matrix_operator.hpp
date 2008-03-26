@@ -131,11 +131,12 @@ namespace pyublasext
 
   template <typename MatrixType, 
            typename OperandType, 
-           typename ResultType = OperandType &>
+           typename ResultType = OperandType &,
+           typename MatrixHolder = const MatrixType &>
   class ublas_matrix_operator : public matrix_operator<OperandType, ResultType>
   {
     private:
-      const MatrixType &m_matrix;
+      MatrixHolder m_matrix;
       typedef matrix_operator<OperandType, ResultType> super;
 
     public:
@@ -190,7 +191,7 @@ namespace pyublasext
       void apply(const OperandType &operand, ResultType result) const
       {
         super::apply(operand, result);
-        result = operand;
+        result.assign(operand);
       }
   };
 
@@ -332,9 +333,9 @@ namespace pyublasext
         m_imaginary.apply(operand_real, result_imag_1);
         m_real.apply(operand_imag, result_imag_2);
 
-        result = result_real_1 + result_real_2 + 
+        result.assign(result_real_1 + result_real_2 + 
           std::complex<typename real_operator::result_type::value_type>(0,1) 
-          * (result_imag_1 + result_imag_2);
+          * (result_imag_1 + result_imag_2));
       }
   };
 

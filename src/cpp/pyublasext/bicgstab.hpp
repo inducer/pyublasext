@@ -195,7 +195,7 @@ namespace pyublasext
         : super(maxit, tol), m_matrix(mat), m_preconditioner(precon)
       { 
         if (mat.size1() != mat.size2())
-          throw std::runtime_error("bicgstab: matrix has to be quadratic (and sym. pos. def.) to work with cg");
+          throw std::runtime_error("bicgstab: matrix has to be quadratic to work with bicgstab");
       }
 
       unsigned size1() const
@@ -207,20 +207,22 @@ namespace pyublasext
         return m_matrix.size1();
       }
 
-      void apply(const OperandType &before, ResultType after) const
+      void apply(const OperandType &operand, ResultType result) const
       {
-        super::apply(before, after);
+        super::apply(operand, result);
 
-        after.clear();
+        ResultType iterand = result;
+        iterand.clear();
         solve_bicgstab(
             m_matrix, 
             m_preconditioner, 
-            after, 
-            before, 
+            iterand, 
+            operand, 
             this->m_tolerance,
             this->m_maxIterations, 
             const_cast<unsigned *>(&this->m_lastIterationCount), 
             this->m_debugLevel);
+        result.assign(iterand);
       }
   };
 }

@@ -58,10 +58,11 @@ namespace
 
 
 
-  template <typename Vector>
-  python::object daskr_step_wrapper(daskr::dae_solver<Vector> &s,
-      double t, double tout, Vector &y,
-      Vector &yprime)
+  template <typename DAESolver>
+  python::object daskr_step_wrapper(DAESolver &s,
+      double t, double tout, 
+      typename DAESolver::vector_ref_type y, 
+      typename DAESolver::vector_ref_type yprime)
   {
     daskr::state state = s.step(t, tout, y, yprime);
     return python::make_tuple(state, t);
@@ -89,65 +90,51 @@ void pyublasext_expose_daskr()
     .value("FOUND_ROOT", daskr::FOUND_ROOT)
     .export_values();
 
+  typedef numpy_vector<double> vec;
   {
-    typedef numpy_vector<double> vec;
-    typedef daskr::dae<vec> wrapped_type;
+    typedef daskr::dae<vec> cl;
 
-    python::class_<dae_wrapper<ublas::vector<double> >,
+    python::class_<dae_wrapper<vec>,
       boost::noncopyable>("DAE")
-      .def("dimension", python::pure_virtual(&wrapped_type::dimension))
-      .def("residual", &wrapped_type::residual)
+      .def("dimension", python::pure_virtual(&cl::dimension))
+      .def("residual", &cl::residual)
       ;
   }
 
   {
-    typedef numpy_vector<double> vec;
-    typedef daskr::dae_solver<vec, vec> wrapped_type;
+    typedef daskr::dae_solver<vec, vec> cl;
 
-    python::class_<wrapped_type>("DAESolver", 
+#define RWPROP(name) \
+      add_property(#name,  \
+          &cl::name, \
+          &cl::set_##name)
+#define RWPROPDOC(name,doc) \
+      add_property(#name,  \
+          &cl::name, \
+          &cl::set_##name, doc)
+
+    python::class_<cl>("DAESolver", 
         python::init<daskr::dae<vec> &>()
         [python::with_custodian_and_ward<1,2>()])
-      .add_property("relative_tolerance", 
-          &wrapped_type::relative_tolerance,
-          &wrapped_type::set_relative_tolerance)
-      .add_property("absolute_tolerance", 
-          &wrapped_type::absolute_tolerance,
-          &wrapped_type::set_absolute_tolerance)
-      .add_property("want_intermediate_steps", 
-          &wrapped_type::want_intermediate_steps,
-          &wrapped_type::set_want_intermediate_steps)
+      .RWPROP(relative_tolerance)
+      .RWPROP(absolute_tolerance)
+      .RWPROP(want_intermediate_steps)
 
-      .add_property("want_tstop", 
-          &wrapped_type::want_tstop,
-          &wrapped_type::set_want_tstop)
-      .add_property("tstop", 
-          &wrapped_type::tstop,
-          &wrapped_type::set_tstop)
+      .RWPROP(want_tstop)
+      .RWPROP(tstop)
 
-      .add_property("want_max_step", 
-          &wrapped_type::want_max_step,
-          &wrapped_type::set_want_max_step)
-      .add_property("max_step", 
-          &wrapped_type::max_step,
-          &wrapped_type::set_max_step)
+      .RWPROP(want_max_step)
+      .RWPROP(max_step)
 
-      .add_property("want_ini_step", 
-          &wrapped_type::want_ini_step,
-          &wrapped_type::set_want_ini_step)
-      .add_property("ini_step", 
-          &wrapped_type::ini_step,
-          &wrapped_type::set_ini_step)
+      .RWPROP(want_ini_step)
+      .RWPROP(ini_step)
 
-      .add_property("init_consistency", 
-          &wrapped_type::init_consistency,
-          &wrapped_type::set_init_consistency)
-      .add_property("want_return_with_ic", 
-          &wrapped_type::want_return_with_ic,
-          &wrapped_type::set_want_return_with_ic,
+      .RWPROP(init_consistency)
+      .RWPROPDOC(want_return_with_ic,
           "Whether the integrator will return after consistent initial conditions"
           "have been computed.")
 
-      .def("step", daskr_step_wrapper<ublas::vector<double> >,
+      .def("step", daskr_step_wrapper<cl>,
               "(self,t,tout,y,yprime) -> (state, t) Integrate the DAE by one step.\n\n"
               "Return a tuple (state, t) containing exit status and ending"
               "time of integration."

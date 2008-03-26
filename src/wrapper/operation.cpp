@@ -13,14 +13,14 @@
 
 
 
+#include <boost/numeric/bindings/traits/ublas_matrix.hpp>
+#include <boost/numeric/bindings/traits/type.hpp>
+#include <boost/numeric/ublas/io.hpp>
+
 #include <boost/python.hpp>
 #include <pyublas/numpy.hpp>
 #include <pyublasext/cg.hpp>
 #include <pyublasext/bicgstab.hpp>
-
-#include <boost/numeric/bindings/traits/ublas_matrix.hpp>
-#include <boost/numeric/bindings/traits/type.hpp>
-
 
 
 
@@ -84,7 +84,7 @@ struct matrix_operator_wrapper
     void apply(const typename super::operand_type &operand, 
         typename super::complete_result_type result) const
     {
-      this->get_override("apply")(boost::cref(operand), result);
+      this->get_override("apply")(operand, result);
     }
 };
 
@@ -92,50 +92,63 @@ struct matrix_operator_wrapper
 
 
 // ublas_matrix_operator ------------------------------------------------------
-template <typename MatrixType>
-static ublas_matrix_operator<
-  MatrixType,
-  numpy_vector<typename MatrixType::value_type>,
-  numpy_vector<typename MatrixType::value_type>
-  > *
-make_matrix_operator(const MatrixType &mat)
-{
-  typedef
-   ublas_matrix_operator<
-   MatrixType,
-    numpy_vector<typename MatrixType::value_type>,
-    numpy_vector<typename MatrixType::value_type> >
-      mop_type;
-  return new mop_type(mat);
-}
-
-
-
-
 struct ublas_matrix_operator_exposer
 {
   template <typename MatrixType>
-  void expose(const std::string &python_mattype, MatrixType) const
+  struct type
   {
-    typedef typename MatrixType::value_type value_type;
+    typedef MatrixType matrix_type;
+    typedef typename matrix_type::value_type value_type;
     typedef numpy_vector<value_type> vector_type;
     typedef
-      ublas_matrix_operator<MatrixType, vector_type, vector_type>
-        mop_type;
-
+      ublas_matrix_operator<matrix_type, vector_type, vector_type>
+      mop_type;
     typedef
       matrix_operator<vector_type, vector_type>
       super_type;
 
-    python::class_<mop_type, 
-    python::bases<super_type> >
-      (("MatrixOperator" + python_mattype).c_str(),
-       python::init<const MatrixType &>()[python::with_custodian_and_ward<1,2>()]);
-    python::def("make_matrix_operator", make_matrix_operator<MatrixType>,
-        python::return_value_policy<
-        python::manage_new_object,
-        python::with_custodian_and_ward_postcall<0, 1> >());
-  }
+    static mop_type *make(const matrix_type &mat)
+    { return new mop_type(mat); }
+
+    static void expose(const std::string &python_mattype)
+    {
+      python::class_<mop_type, 
+        python::bases<super_type> >
+          (("MatrixOperator" + python_mattype).c_str(),
+           python::init<const matrix_type &>()[python::with_custodian_and_ward<1,2>()]);
+      python::def("make_matrix_operator", make,
+          python::return_value_policy<
+          python::manage_new_object,
+          python::with_custodian_and_ward_postcall<0, 1> >());
+    }
+  };
+
+  template <typename ValueType>
+  struct type<numpy_matrix<ValueType> >
+  {
+    typedef numpy_matrix<ValueType> matrix_type;
+    typedef typename matrix_type::value_type value_type;
+    typedef numpy_vector<value_type> vector_type;
+    typedef
+      ublas_matrix_operator<matrix_type, vector_type, vector_type, matrix_type>
+      mop_type;
+    typedef
+      matrix_operator<vector_type, vector_type>
+      super_type;
+
+    static mop_type *make(const matrix_type &mat)
+    { return new mop_type(mat); }
+
+    static void expose(const std::string &python_mattype)
+    {
+      python::class_<mop_type, 
+        python::bases<super_type> >
+          (("MatrixOperator" + python_mattype).c_str(),
+           python::init<const matrix_type &>()[python::with_custodian_and_ward<1,2>()]);
+      python::def("make_matrix_operator", make,
+          python::return_value_policy<python::manage_new_object>());
+    }
+  };
 };
 
 
@@ -262,31 +275,31 @@ static void expose_matrix_operators(const std::string &python_eltname, ValueType
 // arpack ---------------------------------------------------------------------
 #ifdef USE_ARPACK
 template <typename ResultsType>
-static typename ResultsType::value_container::iterator beginRitzValues(ResultsType &res)
+static typename ResultsType::value_container::iterator begin_ritz_values(ResultsType &res)
 {
   return res.m_ritz_values.begin();
 }
 
 template <typename ResultsType>
-static typename ResultsType::value_container::iterator endRitzValues(ResultsType &res)
+static typename ResultsType::value_container::iterator end_ritz_values(ResultsType &res)
 {
   return res.m_ritz_values.end();
 }
 
 template <typename ResultsType>
-static typename ResultsType::vector_container::iterator beginRitzVectors(ResultsType &res)
+static typename ResultsType::vector_container::iterator begin_ritz_vectors(ResultsType &res)
 {
   return res.m_ritz_vectors.begin();
 }
 
 template <typename ResultsType>
-static typename ResultsType::vector_container::iterator endRitzVectors(ResultsType &res)
+static typename ResultsType::vector_container::iterator end_ritz_vectors(ResultsType &res)
 {
   return res.m_ritz_vectors.end();
 }
 
 template <typename ValueType, typename RealType>
-arpack::results<ublas::vector<std::complex<RealType> > > *wrapArpack(
+arpack::results<numpy_vector<std::complex<RealType> > > *wrap_arpack(
       const matrix_operator<MOP_TP_ARGS(ValueType)> &op, 
       const matrix_operator<MOP_TP_ARGS(ValueType)> *m,
       arpack::arpack_mode mode,
@@ -298,12 +311,17 @@ arpack::results<ublas::vector<std::complex<RealType> > > *wrapArpack(
       int max_iterations
       )
 {
-  typedef arpack::results<ublas::vector<std::complex<RealType> > > results_type;
+  typedef matrix_operator<MOP_TP_ARGS(ValueType)> mop_type;
+  typedef numpy_vector<ValueType> it_vec_type;
+  typedef numpy_vector<std::complex<RealType> > res_vec_type;
+  typedef arpack::results<res_vec_type> results_type;
+
   std::auto_ptr<results_type> results(new results_type());
-  ublas::vector<ValueType> start_vector = ublas::unit_vector<ValueType>(op.size1(), 0);
+  it_vec_type start_vector = ublas::unit_vector<ValueType>(op.size1(), 0);
+
   try
   {
-    arpack::performReverseCommunication(
+    arpack::perform_reverse_communication<mop_type, res_vec_type, it_vec_type>(
       op, m, mode, spectral_shift, 
       number_of_eigenvalues, number_of_arnoldi_vectors,
       *results, start_vector,
@@ -323,18 +341,18 @@ arpack::results<ublas::vector<std::complex<RealType> > > *wrapArpack(
 template <typename ValueType>
 static void exposeArpack(const std::string &python_valuetypename, ValueType)
 {
-  typedef typename arpack::results<ublas::vector<ValueType> > results_type;
+  typedef typename arpack::results<numpy_vector<ValueType> > results_type;
   typedef typename ublas::type_traits<ValueType>::real_type real_type;
 
   python::class_<results_type>
     (("ArpackResults"+python_valuetypename).c_str())
     .add_property("RitzValues", 
-        python::range(beginRitzValues<results_type>, endRitzValues<results_type>))
+        python::range(begin_ritz_values<results_type>, end_ritz_values<results_type>))
     .add_property("RitzVectors", 
-        python::range(beginRitzVectors<results_type>, endRitzVectors<results_type>))
+        python::range(begin_ritz_vectors<results_type>, end_ritz_vectors<results_type>))
     ;
 
-  python::def("runArpack", wrapArpack<ValueType, real_type>,
+  python::def("run_arpack", wrap_arpack<ValueType, real_type>,
               python::return_value_policy<python::manage_new_object>());
 }
 #endif // USE_ARPACK
@@ -390,62 +408,27 @@ bool has_daskr() {
 namespace
 {
   template <typename Exposer, typename ValueType>
-    void expose_for_all_simple_types(const std::string &python_eltname, const Exposer &exposer, ValueType)
+    void expose_with_matrices_with_value_type(const std::string &python_eltname)
     {
-      exposer.expose("Matrix" + python_eltname, numpy_matrix<ValueType>());
-      exposer.expose("SparseExecuteMatrix" + python_eltname, 
-          ublas::compressed_matrix<ValueType, 
-          ublas::column_major, 0, ublas::unbounded_array<int> >());
-      exposer.expose("SparseBuildMatrix" + python_eltname, 
-          ublas::coordinate_matrix<ValueType, ublas::column_major>());
-    }
-
-
-
-
-  template <typename Exposer, typename T>
-    void expose_for_all_matrices(const Exposer &exposer, T)
-    {
-      expose_for_all_simple_types("Float64", exposer, T());
-    }
-
-
-
-
-  template <typename Exposer, typename T>
-    static void expose_for_all_matrices(const Exposer &exposer, std::complex<T>)
-    {
-      expose_for_all_simple_types("Complex64", exposer, std::complex<T>());
+      Exposer::template type<numpy_matrix<ValueType> >::expose("Matrix" + python_eltname);
+      Exposer::template type<
+        ublas::compressed_matrix<ValueType, 
+        ublas::column_major, 0, ublas::unbounded_array<int> 
+        > >::expose("SparseExecuteMatrix" + python_eltname);
+      Exposer::template type<
+        ublas::coordinate_matrix<ValueType, ublas::column_major>
+        >::expose("SparseBuildMatrix" + python_eltname);
     }
 
 
 
 
   template <typename Exposer>
-    static void expose_for_all_matrices(const Exposer &exposer)
+    static void expose_with_all_matrices()
     {
-      expose_for_all_matrices(exposer, double());
-      expose_for_all_matrices(exposer, std::complex<double>());
+      expose_with_matrices_with_value_type<Exposer, double>("Float64");
+      expose_with_matrices_with_value_type<Exposer, std::complex<double> >("Complex128");
     }
-
-
-
-
-  template <typename Exposer,typename T>
-    static void exposeForMatricesConvertibleTo(const Exposer &exposer, T)
-    {
-      expose_for_all_matrices(exposer, T());
-    }
-
-
-
-
-  template <typename Exposer,typename T>
-    static void exposeForMatricesConvertibleTo(const Exposer &exposer, std::complex<T>)
-    {
-      expose_for_all_matrices(exposer);
-    }
-
 }
 
 
@@ -457,12 +440,12 @@ void pyublasext_expose_daskr();
 
 
 
-BOOST_PYTHON_MODULE(_operation)
+BOOST_PYTHON_MODULE(_internal)
 {
   pyublasext_expose_daskr();
 
   expose_matrix_operators("Float64", double());
-  expose_matrix_operators("Complex64", std::complex<double>());
+  expose_matrix_operators("Complex128", std::complex<double>());
 
   // expose complex adaptor only for real-valued matrices
   {
@@ -478,7 +461,7 @@ BOOST_PYTHON_MODULE(_operation)
        [python::with_custodian_and_ward<1, 2, python::with_custodian_and_ward<1, 3> >()]);
   }
 
-  expose_for_all_matrices(ublas_matrix_operator_exposer());
+  expose_with_all_matrices<ublas_matrix_operator_exposer>();
 
 #ifdef USE_ARPACK
   python::enum_<arpack::which_eigenvalues>("arpack_which_eigenvalues")
@@ -497,7 +480,7 @@ BOOST_PYTHON_MODULE(_operation)
     .export_values();
 
   exposeArpack("Float64", double());
-  exposeArpack("Complex64", std::complex<double>());
+  exposeArpack("Complex128", std::complex<double>());
 #endif // USE_ARPACK
 
   python::def("has_blas", has_blas, 
