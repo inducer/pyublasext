@@ -374,7 +374,7 @@ namespace pyublasext
       void apply(const OperandType &operand, ResultType result) const
       {
         super::apply(operand, result);
-        result = m_factor * operand;
+        result.assign(m_factor * operand);
       }
   };
 
