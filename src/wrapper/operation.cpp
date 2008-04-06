@@ -13,6 +13,8 @@
 
 
 
+#include <boost/numeric/ublas/matrix_sparse.hpp>
+
 #include <boost/numeric/bindings/traits/ublas_matrix.hpp>
 #include <boost/numeric/bindings/traits/type.hpp>
 #include <boost/numeric/ublas/io.hpp>
@@ -116,7 +118,7 @@ struct ublas_matrix_operator_exposer
         python::bases<super_type> >
           (("MatrixOperator" + python_mattype).c_str(),
            python::init<const matrix_type &>()[python::with_custodian_and_ward<1,2>()]);
-      python::def("make_matrix_operator", make,
+      python::def("make_matrix_operator", type::make,
           python::return_value_policy<
           python::manage_new_object,
           python::with_custodian_and_ward_postcall<0, 1> >());
