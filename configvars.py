@@ -8,6 +8,9 @@ vars = [
     ("BOOST_BINDINGS_INC_DIR", None,
         "Include directory for the Boost bindings library"),
     # -------------------------------------------------------------------------
+    ("NUMPY_INC_DIR", None,
+        "Include directory for NumPy"),
+    # -------------------------------------------------------------------------
     ("HAVE_DASKR", False,
         "Whether to build with support for DASKR"),
     ("COMPILE_DASKR", False,

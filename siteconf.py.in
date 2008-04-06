@@ -44,6 +44,16 @@ UMFPACK_LIBRARIES = $str{UMFPACK_LIB_NAMES}.split(",")
 DASKR_LIBRARY_DIRS = ["fortran/daskr"]
 DASKR_LIBRARIES = ["daskr"]
 
+NUMPY_INC_DIRS=[$str{NUMPY_INC_DIR}]
+if not NUMPY_INC_DIRS:
+    try:
+        import numpy
+        from os.path import join
+        NUMPY_INC_DIRS.append(
+            join(numpy.__path__[0], "core", "include"))
+    except:
+        pass
+
 # --------------------------------------------------------------------
 # Compiler flags
 # --------------------------------------------------------------------
