@@ -35,9 +35,14 @@ class TestMatrices(unittest.TestCase):
         a.add_scattered([5,7], [1,3], pyublas.why_not(b, matrix=True, dtype=dtype))
 
     def test_add_scattered(self):
+        if not pyublas.has_sparse_wrappers():
+            return
+
         self.for_all_dtypes(self.do_test_add_scattered)
 
     def do_test_umfpack(self, dtype):
+        if not pyublas.has_sparse_wrappers():
+            return
         if not pyublasext.has_umfpack():
             return
 
@@ -99,6 +104,8 @@ class TestMatrices(unittest.TestCase):
             self.assert_(la.norm(err) < 1e-7)
 
     def test_arpack_generalized(self):
+        if not pyublas.has_sparse_wrappers():
+            return
         self.for_all_dtypes(self.do_test_arpack_generalized)
 
     def do_test_arpack_shift_invert(self, dtype):
@@ -146,6 +153,8 @@ class TestMatrices(unittest.TestCase):
         self.assert_(count_elements(A1) == count_elements(A2))
 
     def test_sparse(self):
+        if not pyublas.has_sparse_wrappers():
+            return
         self.for_all_dtypes(self.do_test_sparse)
 
     def do_test_bicgstab(self, dtype):
@@ -240,6 +249,8 @@ class TestMatrices(unittest.TestCase):
         self.assert_small(err)
 
     def test_sparse_operators(self):
+        if not pyublas.has_sparse_wrappers():
+            return
         for flavor in [pyublas.SparseBuildMatrix, pyublas.SparseExecuteMatrix]:
             self.do_test_sparse_operators(flavor)
             
