@@ -77,12 +77,21 @@ def main():
     handle_component("XERBLA")
 
     setup(name="PyUblasExt",
-          version="0.90",
-          description="Ublas-based NumPy extensions",
+          version="0.92",
+          description="Added functionality for PyUblas",
+          long_description="""
+          PyUblasExt is a companion to PyUblas and exposes a variety of useful additions to PyUblas:
+
+          * A cross-language "operator" class for building matrix-free algorithms
+          * CG and BiCGSTAB linear solvers that use this operator class
+          * An `ARPACK <http://mathema.tician.de/software/arpack>`_ interface that also uses this operator class
+          * An UMFPACK interface for PyUblas's sparse matrices
+          * An interface to the `DASKR <http://www.netlib.org/ode/>` ODE solver.
+          """,
           author=u"Andreas Kloeckner",
           author_email="inform@tiker.net",
           license = "BSD",
-          url="http://news.tiker.net/software/pyublas",
+          url="http://mathema.tician.de/software/pyublas/pyublasext",
           packages=["pyublasext"],
           package_dir={"pyublasext": "src/python"},
           ext_package="pyublasext",

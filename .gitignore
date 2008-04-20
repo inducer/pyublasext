@@ -10,3 +10,5 @@ doc/html
 Makefile
 tags
 *.session
+MANIFEST
+dist
