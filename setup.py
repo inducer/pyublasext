@@ -80,13 +80,15 @@ def main():
           version="0.92",
           description="Added functionality for PyUblas",
           long_description="""
-          PyUblasExt is a companion to PyUblas and exposes a variety of useful additions to PyUblas:
+          PyUblasExt is a companion to 
+          `PyUblas <http://mathema.tician.de/software/pyublas>`_
+          and exposes a variety of useful additions to it:
 
           * A cross-language "operator" class for building matrix-free algorithms
           * CG and BiCGSTAB linear solvers that use this operator class
           * An `ARPACK <http://mathema.tician.de/software/arpack>`_ interface that also uses this operator class
           * An UMFPACK interface for PyUblas's sparse matrices
-          * An interface to the `DASKR <http://www.netlib.org/ode/>` ODE solver.
+          * An interface to the `DASKR <http://www.netlib.org/ode/>`_ ODE solver.
           """,
           author=u"Andreas Kloeckner",
           author_email="inform@tiker.net",
