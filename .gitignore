@@ -12,3 +12,4 @@ tags
 *.session
 MANIFEST
 dist
+*.egg-info

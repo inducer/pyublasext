@@ -1,9 +1,7 @@
 include configure
 include test/*.py
 include Makefile.in
-include siteconf.py.in
-include configvars.py
-include src/pyublasext/*.hpp
+include src/cpp/pyublasext/*.hpp
 
 include fortran/daskr/*.sh
 include fortran/daskr/*.f
