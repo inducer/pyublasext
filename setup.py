@@ -15,8 +15,6 @@ def get_config_schema():
         LibraryDir("BOOST", []),
         Libraries("BOOST_PYTHON", ["boost_python-gcc42-mt"]),
 
-        IncludeDir("NUMPY"),
-
         IncludeDir("BOOST_BINDINGS", []),
 
         Switch("HAVE_BLAS", False, "Whether to build with support for BLAS"),
@@ -43,6 +41,8 @@ def get_config_schema():
 
         StringListOption("CXXFLAGS", [], 
             help="Any extra C++ compiler options to include"),
+        StringListOption("LDFLAGS", [], 
+            help="Any extra linker options to include"),
         ])
 
 
@@ -51,10 +51,11 @@ def get_config_schema():
 def main():
     import glob
     import os
-    from aksetup_helper import hack_distutils, get_config, setup, Extension
+    from aksetup_helper import hack_distutils, get_config, setup, \
+            NumpyExtension
 
     hack_distutils()
-    conf = get_config()
+    conf = get_config(get_config_schema())
 
     # These are in Fortran. No headers available.
     conf["BLAS_INC_DIR"] = []
@@ -73,17 +74,8 @@ def main():
     if conf["COMPILE_XERBLA"]:
         os.system("cd fortran/xerbla; ./build.sh")
 
-    if conf["NUMPY_INC_DIR"] is None:
-        try:
-            import numpy
-            from os.path import join
-            conf["NUMPY_INC_DIR"] = [join(numpy.__path__[0], "core", "include")]
-        except:
-            pass
+    INCLUDE_DIRS = ["src/cpp"] + conf["BOOST_INC_DIR"]
 
-    INCLUDE_DIRS = ["src/cpp"] + \
-                   conf["BOOST_INC_DIR"] + \
-                   conf["NUMPY_INC_DIR"]
     LIBRARY_DIRS = conf["BOOST_LIB_DIR"]
     LIBRARIES = conf["BOOST_PYTHON_LIBNAME"]
 
@@ -105,7 +97,7 @@ def main():
     if conf["HAVE_UMFPACK"] and not conf["USE_UMFPACK"]:
         print "*** UMFPACK disabled because BLAS is missing"
 
-    OP_EXTRA_DEFINES = {}
+    OP_EXTRA_DEFINES = { "PYUBLAS_HAVE_BOOST_BINDINGS":1 }
 
     def handle_component(comp):
         if conf["USE_"+comp]:
@@ -122,7 +114,7 @@ def main():
     handle_component("XERBLA")
 
     setup(name="PyUblasExt",
-          version="0.92.1",
+          version="0.92.4",
           description="Added functionality for PyUblas",
           long_description="""
           PyUblasExt is a companion to 
@@ -134,6 +126,9 @@ def main():
           * An `ARPACK <http://mathema.tician.de/software/arpack>`_ interface that also uses this operator class
           * An UMFPACK interface for PyUblas's sparse matrices
           * An interface to the `DASKR <http://www.netlib.org/ode/>`_ ODE solver.
+
+          Please refer to the `PyUblas build documentation
+          <http://tiker.net/doc/pyublas>`_ for build instructions.
           """,
           author=u"Andreas Kloeckner",
           author_email="inform@tiker.net",
@@ -156,26 +151,28 @@ def main():
 
           # dependencies
           setup_requires=[
-              "PyUblas>=0.92.1",
+              "PyUblas>=0.92.4",
+              ],
+          install_requires=[
+              "PyUblas>=0.92.4",
               ],
 
           packages=["pyublasext"],
           zip_safe=False,
           package_dir={"pyublasext": "src/python"},
           ext_package="pyublasext",
-          ext_modules=[ 
-                        Extension( "_internal", 
-                                   [
-                                       "src/wrapper/operation.cpp",
-                                       "src/wrapper/op_daskr.cpp",
-                                    ],
-                                   define_macros=list(OP_EXTRA_DEFINES.iteritems()),
-                                   include_dirs=INCLUDE_DIRS + OP_EXTRA_INCLUDE_DIRS,
-                                   library_dirs=LIBRARY_DIRS + OP_EXTRA_LIBRARY_DIRS,
-                                   libraries=LIBRARIES + OP_EXTRA_LIBRARIES,
-                                   extra_compile_args=conf["CXXFLAGS"],
-                                   ),
-                        ],
+          ext_modules=[ NumpyExtension( "_internal", 
+              [
+                  "src/wrapper/operation.cpp",
+                  "src/wrapper/op_daskr.cpp",
+                  ],
+              define_macros=list(OP_EXTRA_DEFINES.iteritems()),
+              include_dirs=INCLUDE_DIRS + OP_EXTRA_INCLUDE_DIRS,
+              library_dirs=LIBRARY_DIRS + OP_EXTRA_LIBRARY_DIRS,
+              libraries=LIBRARIES + OP_EXTRA_LIBRARIES,
+              extra_compile_args=conf["CXXFLAGS"],
+              extra_link_args=conf["LDFLAGS"],
+              ), ],
           data_files=[("include/pyublasext", glob.glob("src/cpp/pyublasext/*.hpp"))],
          )
 
