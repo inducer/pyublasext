@@ -52,7 +52,7 @@ def main():
     import glob
     import os
     from aksetup_helper import hack_distutils, get_config, setup, \
-            NumpyExtension
+            PyUblasExtension
 
     hack_distutils()
     conf = get_config(get_config_schema())
@@ -161,7 +161,7 @@ def main():
           zip_safe=False,
           package_dir={"pyublasext": "src/python"},
           ext_package="pyublasext",
-          ext_modules=[ NumpyExtension( "_internal", 
+          ext_modules=[ PyUblasExtension( "_internal", 
               [
                   "src/wrapper/operation.cpp",
                   "src/wrapper/op_daskr.cpp",
