@@ -157,7 +157,6 @@ def main():
 
           packages=["pyublasext"],
           zip_safe=False,
-          package_dir={"pyublasext": "src/python"},
           ext_package="pyublasext",
           ext_modules=[ PyUblasExtension( "_internal", 
               [

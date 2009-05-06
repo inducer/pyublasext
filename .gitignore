@@ -13,3 +13,5 @@ tags
 MANIFEST
 dist
 *.egg-info
+*.pyd
+*.so
