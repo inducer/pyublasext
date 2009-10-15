@@ -16,3 +16,4 @@ dist
 *.egg-info
 *.pyd
 *.so
+setuptools.pth
