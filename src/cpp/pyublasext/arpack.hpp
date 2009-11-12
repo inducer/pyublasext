@@ -268,12 +268,8 @@ namespace boost { namespace numeric { namespace bindings {  namespace arpack {
 
     boost::scoped_array<value_type> workd(new value_type[3*n]);
     int lworkl;
-    if (detail::is_complex(value_type()))
-      lworkl = 3 * number_of_arnoldi_vectors * number_of_arnoldi_vectors 
-        + 5 * number_of_arnoldi_vectors;
-    else
-      lworkl = 3 * number_of_arnoldi_vectors * number_of_arnoldi_vectors 
-        + 6 * number_of_arnoldi_vectors;
+    lworkl = 3 * number_of_arnoldi_vectors * number_of_arnoldi_vectors 
+      + 6 * number_of_arnoldi_vectors;
 
     boost::scoped_array<value_type> workl(new value_type[lworkl]);
     boost::scoped_array<double> rwork(new double[number_of_arnoldi_vectors]);
