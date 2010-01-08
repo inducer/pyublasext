@@ -319,7 +319,8 @@ namespace pyublasext
       void apply(const OperandType &operand, ResultType result) const
       {
         super::apply(operand, result);
-
+        typedef typename real_operator::result_type::value_type real_t;
+        typedef std::complex<real_t> complex_t;
         typename real_operator::operand_type 
           operand_real(real(operand)), operand_imag(imag(operand));
         typename real_operator::result_type 
@@ -333,9 +334,9 @@ namespace pyublasext
         m_imaginary.apply(operand_real, result_imag_1);
         m_real.apply(operand_imag, result_imag_2);
 
-        result.assign(result_real_1 + result_real_2 + 
-          std::complex<typename real_operator::result_type::value_type>(0,1) 
-          * (result_imag_1 + result_imag_2));
+        OperandType result_imag_12 = result_imag_1 + result_imag_2;
+
+        result.assign(result_real_1 + result_real_2 + complex_t(0,1) * result_imag_12);
       }
   };
 
