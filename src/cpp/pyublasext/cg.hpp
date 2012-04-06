@@ -23,6 +23,7 @@
 #include <stdexcept>
 #include <boost/numeric/ublas/matrix.hpp>
 #include <pyublasext/matrix_operator.hpp>
+#include <pyublasext/bicgstab.hpp> // for absolute_value
 
 
 
