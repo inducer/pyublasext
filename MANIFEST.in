@@ -1,5 +1,6 @@
 include test/*.py
-include src/cpp/pyublasext/*.hpp
+
+include pyublasext/include/pyublasext/*.hpp
 
 include fortran/daskr/*.sh
 include fortran/daskr/*.f

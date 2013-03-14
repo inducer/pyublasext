@@ -72,7 +72,7 @@ def main():
     if conf["COMPILE_XERBLA"]:
         os.system("cd fortran/xerbla; ./build.sh")
 
-    INCLUDE_DIRS = ["src/cpp"] + conf["BOOST_INC_DIR"]
+    INCLUDE_DIRS = ["pyublasext/include"] + conf["BOOST_INC_DIR"]
 
     LIBRARY_DIRS = conf["BOOST_LIB_DIR"]
     LIBRARIES = conf["BOOST_PYTHON_LIBNAME"]
@@ -110,6 +110,12 @@ def main():
     handle_component("LAPACK")
     handle_component("BLAS")
     handle_component("XERBLA")
+
+    try:
+        from distutils.command.build_py import build_py_2to3 as build_py
+    except ImportError:
+        # 2.x
+        from distutils.command.build_py import build_py
 
     setup(name="PyUblasExt",
           version="0.92.4",
@@ -169,8 +175,19 @@ def main():
               extra_compile_args=conf["CXXFLAGS"],
               extra_link_args=conf["LDFLAGS"],
               ), ],
+
           data_files=[("include/pyublasext", glob.glob("src/cpp/pyublasext/*.hpp"))],
-         )
+          include_package_data=True,
+          package_data={
+                  "pyublasext": [
+                      "include/pyublasext/*.hpp",
+                      ]
+                  },
+
+          zip_safe=False,
+
+          # 2to3 invocation
+          cmdclass={'build_py': build_py})
 
 
 
