@@ -10,7 +10,7 @@ include fortran/daskr/README
 include fortran/daskr/*.sh
 include fortran/daskr/*.f
 
-include distribute_setup.py
+include ez_setup.py
 include configure.py
 include Makefile.in
 include aksetup_helper.py
