@@ -1,19 +1,16 @@
 #!/usr/bin/env python
 # -*- coding: latin-1 -*-
 
-import os
-import os.path
-import sys
 
 def get_config_schema():
-    from aksetup_helper import ConfigSchema, Option, \
+    from aksetup_helper import ConfigSchema, \
             IncludeDir, LibraryDir, Libraries, BoostLibraries, \
             Switch, StringListOption, make_boost_base_options
 
     return ConfigSchema(make_boost_base_options() + [
         BoostLibraries("python"),
 
-        IncludeDir("BOOST_BINDINGS", []),
+        IncludeDir("BOOST_BINDINGS", ["../boost-numeric-bindings"]),
 
         Switch("HAVE_BLAS", False, "Whether to build with support for BLAS"),
         LibraryDir("BLAS", []),
@@ -24,7 +21,7 @@ def get_config_schema():
         Libraries("LAPACK", ["blas"]),
 
         Switch("COMPILE_DASKR", True, "Whether to build (with) DASKR"),
-        Switch("COMPILE_XERBLA", False, 
+        Switch("COMPILE_XERBLA", False,
             "Whether to compile and add our own XERBLA routine."
             "ATLAS LAPACK does not have one."),
 
@@ -37,13 +34,11 @@ def get_config_schema():
         LibraryDir("UMFPACK", []),
         Libraries("UMFPACK", ["umfpack", "amd"]),
 
-        StringListOption("CXXFLAGS", [], 
+        StringListOption("CXXFLAGS", [],
             help="Any extra C++ compiler options to include"),
-        StringListOption("LDFLAGS", [], 
+        StringListOption("LDFLAGS", [],
             help="Any extra linker options to include"),
         ])
-
-
 
 
 def main():
@@ -121,13 +116,14 @@ def main():
           version="0.92.4",
           description="Added functionality for PyUblas",
           long_description="""
-          PyUblasExt is a companion to 
+          PyUblasExt is a companion to
           `PyUblas <http://mathema.tician.de/software/pyublas>`_
           and exposes a variety of useful additions to it:
 
           * A cross-language "operator" class for building matrix-free algorithms
           * CG and BiCGSTAB linear solvers that use this operator class
-          * An `ARPACK <http://mathema.tician.de/software/arpack>`_ interface that also uses this operator class
+          * An `ARPACK <http://mathema.tician.de/software/arpack>`_ interface
+            that also uses this operator class
           * An UMFPACK interface for PyUblas's sparse matrices
           * An interface to the `DASKR <http://www.netlib.org/ode/>`_ ODE solver.
 
@@ -136,7 +132,7 @@ def main():
           """,
           author=u"Andreas Kloeckner",
           author_email="inform@tiker.net",
-          license = "BSD",
+          license="MIT",
           url="http://mathema.tician.de/software/pyublas/pyublasext",
           classifiers=[
               'Development Status :: 4 - Beta',
@@ -163,7 +159,7 @@ def main():
 
           packages=["pyublasext"],
           ext_package="pyublasext",
-          ext_modules=[ PyUblasExtension( "_internal", 
+          ext_modules=[PyUblasExtension("_internal",
               [
                   "src/wrapper/operation.cpp",
                   "src/wrapper/op_daskr.cpp",
@@ -188,8 +184,6 @@ def main():
 
           # 2to3 invocation
           cmdclass={'build_py': build_py})
-
-
 
 
 if __name__ == '__main__':
